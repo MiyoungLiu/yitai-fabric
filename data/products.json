@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "name": "高支精梳纯棉",
+    "category": "棉类",
+    "image": "images/product-cotton.jpg",
+    "weight": "210",
+    "width": "150",
+    "composition": "100% 精梳棉",
+    "desc": "采用优质长绒棉精梳而成，纱线光洁细腻，布面平整有光泽，手感柔软舒适，透气吸汗，适合制作高档衬衫、T恤等。"
+  },
+  {
+    "id": 2,
+    "name": "天然亚麻面料",
+    "category": "麻类",
+    "image": "images/product-linen.jpg",
+    "weight": "180",
+    "width": "145",
+    "composition": "100% 亚麻",
+    "desc": "天然亚麻纤维织造，干爽透气，具有良好的吸湿散湿性能，垂坠感佳，天然肌理感强，适合夏季服装、家居用品。"
+  },
+  {
+    "id": 3,
+    "name": "桑蚕丝缎面",
+    "category": "丝类",
+    "image": "images/product-silk.jpg",
+    "weight": "120",
+    "width": "140",
+    "composition": "100% 桑蚕丝",
+    "desc": "纯正桑蚕丝材质，缎面光泽优雅高贵，手感丝滑细腻，垂坠感极佳，适合制作高档礼服、丝巾、家居饰品。"
+  },
+  {
+    "id": 4,
+    "name": "羊毛双面呢",
+    "category": "毛类",
+    "image": "images/product-wool.jpg",
+    "weight": "380",
+    "width": "150",
+    "composition": "80% 羊毛 20% 聚酯纤维",
+    "desc": "精选澳洲羊毛，双面织造工艺，厚实保暖，手感软糯，挺括有型，适合制作大衣、西装外套等秋冬装。"
+  }
+]

@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>亿泰纺织 - 高端面料供应商</title>
+    <meta name="description" content="亿泰纺织专注中高端面料研发与供应，涵盖棉、麻、丝、毛、功能化纤等全品类，为品牌服饰提供稳定优质的面料解决方案，支持定制开发与小样寄送。">
+    <meta property="og:title" content="亿泰纺织 - 高端面料供应商">
+    <meta property="og:description" content="甄选全球优质面料，涵盖棉、麻、丝、毛、功能化纤全品类，支持定制开发与小样寄送。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://miyoungliu.github.io/yitai-fabric/images/product-cotton.jpg">
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+    <script src="js/tailwind.js"></script>
+    <style>
+        .tab-active {
+            border-bottom: 2px solid #b8864a;
+            color: #b8864a;
+        }
+        .product-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.12);
+        }
+        .product-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-scrolled {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 24px rgb(0 0 0 / 0.07);
+        }
+        /* 背景分层：白色文字蒙层 → 可选实拍图（放入 images/hero-bg.jpg 自动生效）→ 暖色渐变兜底 */
+        .hero-bg {
+            background-image: linear-gradient(to right, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.78) 55%, rgba(255,255,255,0.5) 100%),
+                              url('images/hero-bg.jpg'),
+                              linear-gradient(135deg, #faf6ef 0%, #efe6d4 45%, #ddc9a3 100%);
+            background-size: cover, cover, cover;
+            background-position: center right, center right, center;
+        }
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航 -->
+    <header id="navbar" class="fixed w-full top-0 z-50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-800 tracking-wide">亿泰纺织</h1>
+            <div class="flex space-x-1 bg-white/70 backdrop-blur p-1 rounded-lg border border-gray-200/60">
+                <button id="tab-show" onclick="switchTab('show')" class="tab-active px-3 sm:px-5 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all text-gray-800">
+                    产品展示
+                </button>
+                <button id="tab-admin" onclick="checkAdminPassword()" class="px-3 sm:px-5 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-800 transition-all">
+                    后台管理
+                </button>
+            </div>
+        </div>
+    </header>
+    <!-- 首屏主视觉 -->
+    <section class="hero-bg h-[55vh] sm:h-[65vh] flex items-center pt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 w-full">
+            <div class="max-w-lg sm:max-xl">
+                <p class="text-amber-700 text-xs sm:text-sm tracking-widest mb-3 sm:mb-4 uppercase font-medium">Premium Fabric Supplier</p>
+                <h2 class="text-3xl sm:text-5xl font-bold text-gray-800 mb-4 sm:mb-6 leading-tight">
+                    甄选全球优质面料<br>
+                    成就高端品质设计
+                </h2>
+                <p class="text-gray-600 text-base sm:text-lg mb-6 sm:mb-8 leading-relaxed">
+                    亿泰纺织专注于中高端面料研发与供应，涵盖棉、麻、丝、毛、功能化纤等全品类，为品牌服饰提供稳定优质的面料解决方案。
+                </p>
+                <button onclick="switchTab('show'); document.getElementById('product-grid').scrollIntoView({behavior:'smooth'})" class="bg-gray-800 hover:bg-gray-900 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-md font-medium transition-all shadow-lg shadow-gray-800/20 text-sm sm:text-base">
+                    浏览产品系列
+                </button>
+            </div>
+        </div>
+    </section>
+    <!-- 产品展示页面 -->
+    <main id="show-page" class="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+        <div class="text-center mb-8 sm:mb-12">
+            <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 sm:mb-3">产品系列</h3>
+            <p class="text-gray-500 max-w-xl mx-auto text-sm sm:text-base">全品类高端面料矩阵，支持定制开发与小样寄送</p>
+        </div>
+
+        <!-- 分类筛选 -->
+        <div class="flex flex-wrap gap-2 sm:gap-3 justify-center mb-8 sm:mb-12" id="filter-container">
+            <button class="filter-btn bg-gray-800 text-white px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm" data-category="all">全部</button>
+        </div>
+        <!-- 产品网格 -->
+        <div id="product-grid" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+            <!-- 产品卡片由JS动态生成 -->
+        </div>
+        <!-- 空状态 -->
+        <div id="empty-show" class="hidden text-center py-20">
+            <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+            </svg>
+            <p class="text-gray-400">暂无产品，请前往后台管理添加</p>
+        </div>
+    </main>
+    <!-- 后台管理页面 -->
+    <main id="admin-page" class="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 hidden">
+        <div class="text-center mb-6 sm:mb-8">
+            <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 sm:mb-3">产品管理后台</h3>
+            <p class="text-gray-500 text-sm sm:text-base">新增、编辑或删除面料产品信息</p>
+        </div>
+
+        <!-- 数据管理：发布流程说明 + 导出/导入/清除草稿 -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-5 mb-6 sm:mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center gap-3">
+                <div class="flex-1 text-sm">
+                    <p class="font-medium text-gray-800 mb-1">数据管理（发布流程）</p>
+                    <p id="data-status" class="text-gray-600"></p>
+                    <p class="text-gray-400 text-xs mt-1">修改只保存在当前浏览器；要让访客看到：点「导出数据」下载 products.json → 替换网站目录 data/products.json → 在托管平台重新上传部署。</p>
+                </div>
+                <div class="flex flex-wrap gap-2 flex-shrink-0">
+                    <button type="button" onclick="exportData()" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-medium transition-all">导出数据</button>
+                    <button type="button" onclick="document.getElementById('import-file').click()" class="px-4 py-2 border border-gray-300 bg-white text-gray-600 rounded-md hover:bg-gray-50 transition-colors text-sm">导入数据</button>
+                    <button type="button" onclick="clearDraft()" class="px-4 py-2 border border-amber-300 bg-white text-amber-700 rounded-md hover:bg-amber-100 transition-colors text-sm">清除本地修改</button>
+                    <input type="file" id="import-file" accept=".json,application/json" class="hidden">
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+            <!-- 新增/编辑产品表单 -->
+            <div class="lg:col-span-1 order-2 lg:order-1">
+                <div class="bg-white rounded-xl shadow-lg p-5 sm:p-6 sticky top-20 sm:top-24">
+                    <h4 id="form-title" class="text-lg font-semibold text-gray-800 mb-5 border-b pb-3">添加新产品</h4>
+                    <form id="product-form" class="space-y-4">
+                        <input type="hidden" id="edit-id" value="">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">产品名称 *</label>
+                            <input type="text" id="product-name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 focus:border-gray-800 outline-none text-sm" placeholder="如：高支精梳纯棉">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">产品分类 *</label>
+                            <select id="product-category" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 focus:border-gray-800 outline-none text-sm">
+                                <option value="棉类">棉类</option>
+                                <option value="麻类">麻类</option>
+                                <option value="丝类">丝类</option>
+                                <option value="毛类">毛类</option>
+                                <option value="化纤">化纤</option>
+                                <option value="混纺">混纺</option>
+                                <option value="功能面料">功能面料</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">产品图片（手机拍照可直接选）</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-md p-4 text-center hover:border-gray-500 transition-colors">
+                                <input type="file" id="product-image" accept="image/*" class="hidden">
+                                <div id="image-preview-area" class="mb-2 hidden">
+                                    <img id="image-preview" class="max-h-32 mx-auto rounded object-cover" alt="预览">
+                                </div>
+                                <label for="product-image" class="cursor-pointer text-sm text-gray-600 hover:text-gray-800">
+                                    点击上传图片
+                                </label>
+                                <p class="text-xs text-gray-400 mt-1">手机拍摄大图会自动压缩</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">克重 (g/㎡)</label>
+                                <input type="text" id="product-weight" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 focus:border-gray-800 outline-none text-sm" placeholder="如：210">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">幅宽 (cm)</label>
+                                <input type="text" id="product-width" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 focus:border-gray-800 outline-none text-sm" placeholder="如：150">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">成分说明</label>
+                            <input type="text" id="product-composition" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 focus:border-gray-800 outline-none text-sm" placeholder="如：100%棉">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">产品描述</label>
+                            <textarea id="product-desc" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 focus:border-gray-800 outline-none resize-none text-sm" placeholder="简要描述面料特点、适用场景等"></textarea>
+                        </div>
+                        <div class="flex gap-2 pt-2">
+                            <button type="submit" id="btn-save" class="flex-1 bg-gray-800 hover:bg-gray-900 text-white py-2.5 rounded-md font-medium transition-all text-sm">
+                                保存产品
+                            </button>
+                            <button type="button" onclick="resetForm()" class="px-4 py-2.5 border border-gray-300 text-gray-600 rounded-md hover:bg-gray-50 transition-colors text-sm">
+                                重置
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- 产品列表 -->
+            <div class="lg:col-span-2 order-1 lg:order-2">
+                <div class="bg-white rounded-xl shadow-lg p-5 sm:p-6">
+                    <div class="flex items-center justify-between mb-5 border-b pb-3">
+                        <h4 class="text-lg font-semibold text-gray-800">产品列表</h4>
+                        <span id="product-count" class="text-sm text-gray-500">共 0 款产品</span>
+                    </div>
+
+                    <div id="admin-list" class="space-y-3">
+                        <!-- 管理列表由JS动态生成 -->
+                    </div>
+                    <div id="empty-admin" class="hidden text-center py-12">
+                        <p class="text-gray-400 text-sm">还没有添加任何产品</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- 产品详情弹窗 -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="relative">
+                <button onclick="closeDetail()" class="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-gray-500 hover:text-gray-800 z-10">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                <div class="grid grid-cols-1 md:grid-cols-2">
+                    <div class="bg-gray-100 p-6 sm:p-8 flex items-center justify-center min-h-[200px]">
+                        <img id="detail-image" src="" alt="" class="max-w-full max-h-64 sm:max-h-80 object-contain rounded-lg">
+                    </div>
+                    <div class="p-6 sm:p-8">
+                        <span id="detail-category" class="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full mb-3"></span>
+                        <h3 id="detail-name" class="text-xl sm:text-2xl font-bold text-gray-800 mb-4"></h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex border-b border-gray-100 pb-2">
+                                <span class="text-gray-500 w-20 flex-shrink-0">克重</span>
+                                <span id="detail-weight" class="text-gray-800 font-medium"></span>
+                            </div>
+                            <div class="flex border-b border-gray-100 pb-2">
+                                <span class="text-gray-500 w-20 flex-shrink-0">幅宽</span>
+                                <span id="detail-width" class="text-gray-800 font-medium"></span>
+                            </div>
+                            <div class="flex border-b border-gray-100 pb-2">
+                                <span class="text-gray-500 w-20 flex-shrink-0">成分</span>
+                                <span id="detail-composition" class="text-gray-800 font-medium"></span>
+                            </div>
+                        </div>
+                        <div class="mt-5">
+                            <p class="text-gray-500 text-sm mb-2">产品说明</p>
+                            <p id="detail-desc" class="text-gray-700 text-sm leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // ============ 数据与配置 ============
+        // 线上数据获取失败（如本地 file:// 直接打开）时的兜底数据
+        const FALLBACK_PRODUCTS = [
+            { id: 1, name: '高支精梳纯棉', category: '棉类', image: 'images/product-cotton.jpg', weight: '210', width: '150', composition: '100% 精梳棉', desc: '采用优质长绒棉精梳而成，纱线光洁细腻，布面平整有光泽，手感柔软舒适，透气吸汗，适合制作高档衬衫、T恤等。' },
+            { id: 2, name: '天然亚麻面料', category: '麻类', image: 'images/product-linen.jpg', weight: '180', width: '145', composition: '100% 亚麻', desc: '天然亚麻纤维织造，干爽透气，具有良好的吸湿散湿性能，垂坠感佳，天然肌理感强，适合夏季服装、家居用品。' },
+            { id: 3, name: '桑蚕丝缎面', category: '丝类', image: 'images/product-silk.jpg', weight: '120', width: '140', composition: '100% 桑蚕丝', desc: '纯正桑蚕丝材质，缎面光泽优雅高贵，手感丝滑细腻，垂坠感极佳，适合制作高档礼服、丝巾、家居饰品。' },
+            { id: 4, name: '羊毛双面呢', category: '毛类', image: 'images/product-wool.jpg', weight: '380', width: '150', composition: '80% 羊毛 20% 聚酯纤维', desc: '精选澳洲羊毛，双面织造工艺，厚实保暖，手感软糯，挺括有型，适合制作大衣、西装外套等秋冬装。' }
+        ];
+        // 管理员密码的 SHA-256 哈希（源码不出现明文）
+        const ADMIN_PASSWORD_HASH = '783bedb81e17ab71321f93b0375f15b3fbecd9e729bac1ab95f5bc790de2be20';
+
+        let products = [];          // 当前工作数据：本地草稿（若有）否则线上数据
+        let onlineProducts = [];    // data/products.json 拉取的已发布数据
+        let currentFilter = 'all';
+        let currentImageBase64 = '';
+
+        // ============ 工具函数 ============
+        // HTML 转义，防止产品名等含特殊字符破坏页面
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+        async function sha256Hex(text) {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // ============ 管理员密码校验（哈希比对） ============
+        async function checkAdminPassword() {
+            const inputPwd = prompt('请输入管理员密码进入后台管理：');
+            if (inputPwd === null) return;
+            let ok = false;
+            try { ok = (await sha256Hex(inputPwd)) === ADMIN_PASSWORD_HASH; } catch (e) { ok = false; }
+            if (ok) {
+                switchTab('admin');
+            } else {
+                alert('密码错误，无法进入后台！');
+            }
+        }
+
+        // 图片压缩函数：最大长边1600，质量0.7，返回base64
+        function compressImageToBase64(file, maxSide = 1600, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(file);
+                img.src = objectUrl;
+                img.onload = () => {
+                    URL.revokeObjectURL(objectUrl);
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > maxSide || h > maxSide) {
+                        const scale = maxSide / Math.max(w, h);
+                        w = Math.round(w * scale);
+                        h = Math.round(h * scale);
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    const base64 = canvas.toDataURL('image/jpeg', quality);
+                    resolve(base64);
+                };
+                img.onerror = err => {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(err);
+                };
+            });
+        }
+
+        // ============ 数据层 ============
+        // 加载顺序：data/products.json（线上已发布数据） → 本地草稿 localStorage（管理员修改，仅自己可见）
+        async function loadData() {
+            onlineProducts = null;
+            try {
+                const res = await fetch('data/products.json', { cache: 'no-store' });
+                if (res.ok) {
+                    const arr = await res.json();
+                    if (Array.isArray(arr) && arr.length) onlineProducts = arr;
+                }
+            } catch (e) { /* file:// 打开或网络失败，使用兜底 */ }
+            if (!onlineProducts) onlineProducts = FALLBACK_PRODUCTS.map(p => ({ ...p }));
+
+            products = null;
+            const draft = localStorage.getItem('fabricProducts');
+            if (draft) {
+                try {
+                    const d = JSON.parse(draft);
+                    if (Array.isArray(d)) products = d;
+                } catch (e) { /* 草稿损坏，忽略 */ }
+            }
+            if (!products) products = onlineProducts.map(p => ({ ...p }));
+        }
+        function hasDraft() {
+            return localStorage.getItem('fabricProducts') !== null;
+        }
+        function saveToStorage() {
+            try {
+                localStorage.setItem('fabricProducts', JSON.stringify(products));
+                updateDataStatus();
+                return true;
+            } catch (err) {
+                console.error('存储失败', err);
+                alert('浏览器存储空间已满！请删除部分旧产品后再添加新的。');
+                return false;
+            }
+        }
+        function updateDataStatus() {
+            const el = document.getElementById('data-status');
+            if (!el) return;
+            el.innerHTML = hasDraft()
+                ? '<span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1.5"></span><span class="text-amber-700">当前浏览器有未发布的本地修改（仅你自己可见）</span>'
+                : '<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5"></span><span class="text-green-700">正在使用线上数据（访客所见一致）</span>';
+        }
+        // 导出当前产品数据为 products.json，用于提交部署
+        function exportData() {
+            const blob = new Blob([JSON.stringify(products, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'products.json';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+        // 导入 products.json（恢复或迁移数据）
+        function importDataFile(file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const data = JSON.parse(reader.result);
+                    if (!Array.isArray(data)) throw new Error('格式错误');
+                    products = data.map((p, i) => ({
+                        id: p.id != null ? p.id : i + 1,
+                        name: p.name || '未命名',
+                        category: p.category || '棉类',
+                        image: p.image || '',
+                        weight: p.weight || '',
+                        width: p.width || '',
+                        composition: p.composition || '',
+                        desc: p.desc || ''
+                    }));
+                    saveToStorage();
+                    renderAll();
+                    alert('导入成功，共 ' + products.length + ' 款产品');
+                } catch (err) {
+                    alert('导入失败：请选择后台导出的 products.json 文件');
+                }
+            };
+            reader.readAsText(file);
+        }
+        // 清除本地草稿，恢复为线上数据
+        function clearDraft() {
+            if (!hasDraft()) {
+                alert('当前没有本地修改');
+                return;
+            }
+            if (!confirm('确定清除本地修改并恢复为线上数据吗？未导出的改动将丢失。')) return;
+            localStorage.removeItem('fabricProducts');
+            products = onlineProducts.map(p => ({ ...p }));
+            resetForm();
+            renderAll();
+            updateDataStatus();
+        }
+
+        // ============ 页面渲染 ============
+        function renderAll() {
+            renderFilters();
+            renderProductGrid();
+            renderAdminList();
+        }
+        function switchTab(tab) {
+            const showPage = document.getElementById('show-page');
+            const adminPage = document.getElementById('admin-page');
+            const tabShow = document.getElementById('tab-show');
+            const tabAdmin = document.getElementById('tab-admin');
+            if (tab === 'show') {
+                showPage.classList.remove('hidden');
+                adminPage.classList.add('hidden');
+                tabShow.classList.add('tab-active');
+                tabAdmin.classList.remove('tab-active');
+            } else {
+                showPage.classList.add('hidden');
+                adminPage.classList.remove('hidden');
+                tabShow.classList.remove('tab-active');
+                tabAdmin.classList.add('tab-active');
+                renderAdminList();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        // 分类按钮由产品数据动态生成（支持导入自定义分类）
+        function renderFilters() {
+            const categories = ['全部'].concat([...new Set(products.map(p => p.category).filter(Boolean))]);
+            const container = document.getElementById('filter-container');
+            container.innerHTML = categories.map(cat =>
+                `<button class="filter-btn px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm transition-all ${currentFilter === (cat === '全部' ? 'all' : cat) ? 'bg-gray-800 text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}"
+                data-category="${esc(cat === '全部' ? 'all' : cat)}" onclick="filterProducts(this.dataset.category)">${esc(cat)}</button>`
+            ).join('');
+        }
+        function filterProducts(category) {
+            currentFilter = category;
+            renderFilters();
+            renderProductGrid();
+        }
+        function renderProductGrid() {
+            const grid = document.getElementById('product-grid');
+            const empty = document.getElementById('empty-show');
+
+            let filtered = currentFilter === 'all'
+                ? products
+                : products.filter(p => p.category === currentFilter);
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            grid.innerHTML = filtered.map(product => `
+                <div class="product-card bg-white rounded-xl overflow-hidden shadow-md cursor-pointer" onclick="showDetail(${Number(product.id) || 0})">
+                    <div class="aspect-square bg-gray-100 overflow-hidden">
+                        <img src="${esc(product.image)}" alt="${esc(product.name)}" loading="lazy" class="w-full h-full object-cover" onerror="this.src='images/product-cotton.jpg'">
+                    </div>
+                    <div class="p-3 sm:p-5">
+                        <span class="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded mb-2">${esc(product.category)}</span>
+                        <h4 class="font-semibold text-gray-800 mb-1 text-sm sm:text-base truncate">${esc(product.name)}</h4>
+                        <p class="text-xs sm:text-sm text-gray-500 line-clamp-2 h-8 sm:h-auto">${esc(product.desc || '暂无描述')}</p>
+                        <div class="flex gap-3 mt-2 sm:mt-3 text-xs text-gray-400">
+                            ${product.weight ? `<span>克重 ${esc(product.weight)}g</span>` : ''}
+                            ${product.width ? `<span>幅宽 ${esc(product.width)}cm</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        function renderAdminList() {
+            const list = document.getElementById('admin-list');
+            const empty = document.getElementById('empty-admin');
+            const count = document.getElementById('product-count');
+
+            count.textContent = `共 ${products.length} 款产品`;
+            if (products.length === 0) {
+                list.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            list.innerHTML = products.map(product => `
+                <div class="flex items-center gap-3 sm:gap-4 p-3 border border-gray-100 rounded-lg hover:bg-gray-50">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src="${esc(product.image)}" alt="${esc(product.name)}" class="w-full h-full object-cover" onerror="this.src='images/product-cotton.jpg'">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-medium text-gray-800 truncate text-sm sm:text-base">${esc(product.name)}</h4>
+                        <p class="text-xs text-gray-500 truncate">${esc(product.category)} · ${esc(product.composition || '成分未填写')}</p>
+                    </div>
+                    <div class="flex gap-1 flex-shrink-0">
+                        <button data-id="${Number(product.id) || 0}" class="edit-btn p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="编辑">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </button>
+                        <button data-id="${Number(product.id) || 0}" class="delete-btn p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="删除">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============ 产品增删改 ============
+        function saveProduct() {
+            const editId = document.getElementById('edit-id').value;
+            const name = document.getElementById('product-name').value.trim();
+            const category = document.getElementById('product-category').value;
+            const weight = document.getElementById('product-weight').value.trim();
+            const width = document.getElementById('product-width').value.trim();
+            const composition = document.getElementById('product-composition').value.trim();
+            const desc = document.getElementById('product-desc').value.trim();
+            if (!name) {
+                alert('请填写产品名称');
+                return;
+            }
+            let image = '';
+            if (currentImageBase64) {
+                image = currentImageBase64;
+            } else if (editId) {
+                const old = products.find(p => p.id === Number(editId));
+                if (old) image = old.image;
+            }
+            if (!image) {
+                image = 'images/product-cotton.jpg';
+            }
+            const productData = {
+                name, category, image, weight, width, composition, desc
+            };
+            if (editId) {
+                const index = products.findIndex(p => p.id === Number(editId));
+                if (index > -1) {
+                    products[index] = { ...products[index], ...productData };
+                }
+            } else {
+                const newId = products.length > 0 ? Math.max(...products.map(p => Number(p.id) || 0)) + 1 : 1;
+                products.push({ id: newId, ...productData });
+            }
+            const ok = saveToStorage();
+            if (!ok) return;
+            resetForm();
+            renderAll();
+        }
+        function editProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+            resetForm();
+            document.getElementById('edit-id').value = product.id;
+            document.getElementById('form-title').textContent = '编辑产品';
+            document.getElementById('product-name').value = product.name;
+            document.getElementById('product-category').value = product.category;
+            document.getElementById('product-weight').value = product.weight || '';
+            document.getElementById('product-width').value = product.width || '';
+            document.getElementById('product-composition').value = product.composition || '';
+            document.getElementById('product-desc').value = product.desc || '';
+            if (product.image) {
+                currentImageBase64 = product.image;
+                document.getElementById('image-preview').src = product.image;
+                document.getElementById('image-preview-area').classList.remove('hidden');
+            }
+            document.querySelector('.lg\\:col-span-1').scrollIntoView({ behavior: 'smooth' });
+        }
+        function deleteProduct(id) {
+            if (confirm('确定要删除这款产品吗？删除后无法恢复。')) {
+                products = products.filter(p => p.id !== id);
+                saveToStorage();
+                renderAll();
+            }
+        }
+        function resetForm() {
+            document.getElementById('product-form').reset();
+            document.getElementById('product-image').value = '';
+            document.getElementById('edit-id').value = '';
+            document.getElementById('form-title').textContent = '添加新产品';
+            document.getElementById('image-preview-area').classList.add('hidden');
+            currentImageBase64 = '';
+        }
+
+        // ============ 详情弹窗 ============
+        function showDetail(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+            document.getElementById('detail-image').src = product.image;
+            document.getElementById('detail-name').textContent = product.name;
+            document.getElementById('detail-category').textContent = product.category;
+            document.getElementById('detail-weight').textContent = product.weight ? product.weight + ' g/㎡' : '未标注';
+            document.getElementById('detail-width').textContent = product.width ? product.width + ' cm' : '未标注';
+            document.getElementById('detail-composition').textContent = product.composition || '未标注';
+            document.getElementById('detail-desc').textContent = product.desc || '暂无详细描述';
+            const modal = document.getElementById('detail-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeDetail() {
+            const modal = document.getElementById('detail-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+        document.getElementById('detail-modal').addEventListener('click', function (e) {
+            if (e.target === this) closeDetail();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !document.getElementById('detail-modal').classList.contains('hidden')) closeDetail();
+        });
+
+        // ============ 初始化 ============
+        async function init() {
+            await loadData();
+            renderAll();
+            updateDataStatus();
+
+            // 文件选择变更，执行压缩
+            document.getElementById('product-image').addEventListener('change', async function (e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                try {
+                    currentImageBase64 = await compressImageToBase64(file);
+                    document.getElementById('image-preview').src = currentImageBase64;
+                    document.getElementById('image-preview-area').classList.remove('hidden');
+                } catch (err) {
+                    alert('图片处理失败，请换一张图片');
+                    resetForm();
+                }
+            });
+            // 表单提交
+            document.getElementById('product-form').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                saveProduct();
+            });
+            // 事件委托：管理列表的编辑和删除按钮
+            document.getElementById('admin-list').addEventListener('click', function (e) {
+                const target = e.target.closest('button');
+                if (!target) return;
+                const id = Number(target.dataset.id);
+                if (target.classList.contains('edit-btn')) {
+                    editProduct(id);
+                } else if (target.classList.contains('delete-btn')) {
+                    deleteProduct(id);
+                }
+            });
+            // 导入数据文件选择
+            document.getElementById('import-file').addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) importDataFile(file);
+                e.target.value = '';
+            });
+            // 导航滚动效果
+            window.addEventListener('scroll', function () {
+                const navbar = document.getElementById('navbar');
+                if (window.scrollY > 50) {
+                    navbar.classList.add('nav-scrolled');
+                } else {
+                    navbar.classList.remove('nav-scrolled');
+                }
+            });
+        }
+        init();
+    </script>
+</body>
+</html>
