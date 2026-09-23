@@ -23,7 +23,7 @@ yitai-fabric/
 1. 浏览器登录 GitHub → 头像 → **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**
 2. Repository access 选 **Only select repositories** → `yitai-fabric`（用谁的账号就选谁名下的）
 3. Permissions → **Contents** → **Read and write** → 生成并复制 Token
-4. 打开官网 → 后台管理 → 数据管理区粘贴 Token → 点**保存Token**（只保存在你自己的浏览器）
+4. 打开官网 → 后台管理 → 粘贴 Token 到输入框 → 直接点**发布上线**（自动保存，只存你自己的浏览器）
 
 日常更新：
 
