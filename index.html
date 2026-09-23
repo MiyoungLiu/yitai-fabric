@@ -105,32 +105,29 @@
             <p class="text-gray-500 text-sm sm:text-base">新增、编辑或删除面料产品信息</p>
         </div>
 
-        <!-- 数据管理：发布流程说明 + 导出/导入/清除草稿 -->
+        <!-- 数据管理：一键发布 + 备份恢复 -->
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-5 mb-6 sm:mb-8">
             <div class="flex flex-col lg:flex-row lg:items-center gap-3">
                 <div class="flex-1 text-sm">
-                    <p class="font-medium text-gray-800 mb-1">数据管理（发布流程）</p>
+                    <p class="font-medium text-gray-800 mb-1">数据管理</p>
                     <p id="data-status" class="text-gray-600"></p>
-                    <p class="text-gray-400 text-xs mt-1">修改只保存在当前浏览器；要让访客看到：点「导出数据」下载 products.json → 替换网站目录 data/products.json → 在托管平台重新上传部署。</p>
+                    <p class="text-gray-400 text-xs mt-1">修改保存在当前浏览器，点「发布上线」后约 1 分钟官网自动更新。</p>
                 </div>
-                <div class="flex flex-wrap gap-2 flex-shrink-0">
-                    <button type="button" onclick="exportData()" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-medium transition-all">导出数据</button>
+                <div class="flex flex-col sm:flex-row gap-2 flex-shrink-0 w-full lg:w-auto">
+                    <input type="password" id="gh-token" placeholder="GitHub Token（首次发布前粘贴一次，自动保存）" autocomplete="off" class="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-gray-800">
+                    <button type="button" onclick="publishToGitHub()" class="bg-green-700 hover:bg-green-800 text-white px-6 py-2 rounded-md text-sm font-medium transition-all flex-shrink-0">发布上线</button>
+                </div>
+            </div>
+            <p id="token-status" class="text-xs text-gray-400 mt-2"></p>
+            <details class="border-t border-amber-200 mt-3 pt-2">
+                <summary class="text-xs text-gray-500 cursor-pointer select-none">备份与恢复（导出 / 导入 / 清除本地修改）</summary>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <button type="button" onclick="exportData()" class="px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm">导出数据</button>
                     <button type="button" onclick="document.getElementById('import-file').click()" class="px-4 py-2 border border-gray-300 bg-white text-gray-600 rounded-md hover:bg-gray-50 transition-colors text-sm">导入数据</button>
                     <button type="button" onclick="clearDraft()" class="px-4 py-2 border border-amber-300 bg-white text-amber-700 rounded-md hover:bg-amber-100 transition-colors text-sm">清除本地修改</button>
                     <input type="file" id="import-file" accept=".json,application/json" class="hidden">
                 </div>
-            </div>
-            <!-- 一键发布：通过 GitHub API 直接提交数据文件，手机可用 -->
-            <div class="border-t border-amber-200 mt-3 pt-3 space-y-2">
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input type="password" id="gh-token" placeholder="GitHub Token（用于一键发布，仅保存在本机浏览器）" autocomplete="off" class="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-gray-800">
-                    <div class="flex gap-2 flex-shrink-0">
-                        <button type="button" onclick="saveToken()" class="px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 text-sm">保存Token</button>
-                        <button type="button" onclick="publishToGitHub()" class="bg-green-700 hover:bg-green-800 text-white px-5 py-2 rounded-md text-sm font-medium transition-all">发布上线</button>
-                    </div>
-                </div>
-                <p id="token-status" class="text-xs text-gray-400"></p>
-            </div>
+            </details>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -429,18 +426,12 @@
             bytes.forEach(b => { bin += String.fromCharCode(b); });
             return btoa(bin);
         }
-        function saveToken() {
-            const v = document.getElementById('gh-token').value.trim();
-            if (v) localStorage.setItem('ghPublishToken', v);
-            else localStorage.removeItem('ghPublishToken');
-            updateTokenStatus();
-        }
         function updateTokenStatus() {
             const el = document.getElementById('token-status');
             if (!el) return;
             el.textContent = localStorage.getItem('ghPublishToken')
-                ? '✓ Token 已保存在本浏览器，可直接点「发布上线」'
-                : '未配置 Token：配置后手机/电脑都能在网页上直接发布产品（Token 仅授予本仓库数据写入权限）';
+                ? '✓ Token 已保存，直接点「发布上线」'
+                : '首次发布：先粘贴 Token，点「发布上线」时自动保存（仅授予本仓库数据写入权限）';
         }
         async function ghApi(method, url, body) {
             const token = localStorage.getItem('ghPublishToken');
@@ -473,13 +464,16 @@
             throw new Error('无法定位仓库：若刚转移过仓库，请用当前所有者的账号重新生成 Token 并保存');
         }
         async function publishToGitHub() {
+            // 输入框有内容就自动保存（无需单独的保存按钮）
+            const typed = document.getElementById('gh-token').value.trim();
+            if (typed) { localStorage.setItem('ghPublishToken', typed); updateTokenStatus(); }
             if (!localStorage.getItem('ghPublishToken')) {
                 alert('请先创建并粘贴 GitHub Token（一次性操作）：\n\n' +
                     '1. 电脑或手机浏览器打开 github.com（可登录状态）\n' +
                     '2. 头像 → Settings → Developer settings → Personal access tokens → Fine-grained tokens\n' +
                     '3. Generate new token：Repository access 选 Only select repositories → 选 yitai-fabric 仓库\n' +
                     '4. Permissions → Contents → Read and write → 生成并复制\n' +
-                    '5. 回到本页粘贴到输入框，点「保存Token」');
+                    '5. 回到本页粘贴到输入框，直接点「发布上线」（自动保存）');
                 document.getElementById('gh-token').focus();
                 return;
             }
@@ -503,9 +497,9 @@
                 alert('发布成功！约 1 分钟后官网自动更新，届时刷新页面即可看到。');
             } catch (e) {
                 if (e.status === 401 || e.status === 403) {
-                    localStorage.removeItem('ghPublishToken');
-                    updateTokenStatus();
-                    alert('Token 无效或已过期，请重新创建并保存后再试。');
+                    alert('Token 验证未通过（已粘贴的 Token 会保留，不会丢失）：\n\n' +
+                        '- 仓库正在转移中：转移完成前只有原主人的 Token 能发布，完成后换新主人的 Token 即可\n' +
+                        '- Token 过期或粘贴不完整：重新生成，粘贴后直接点「发布上线」');
                 } else if (e.status === 409) {
                     alert('线上文件刚被别人更新过，请刷新页面获取最新数据后再发布。');
                 } else {
