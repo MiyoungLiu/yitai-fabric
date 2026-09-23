@@ -120,6 +120,17 @@
                     <input type="file" id="import-file" accept=".json,application/json" class="hidden">
                 </div>
             </div>
+            <!-- 一键发布：通过 GitHub API 直接提交数据文件，手机可用 -->
+            <div class="border-t border-amber-200 mt-3 pt-3 space-y-2">
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="password" id="gh-token" placeholder="GitHub Token（用于一键发布，仅保存在本机浏览器）" autocomplete="off" class="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-gray-800">
+                    <div class="flex gap-2 flex-shrink-0">
+                        <button type="button" onclick="saveToken()" class="px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 text-sm">保存Token</button>
+                        <button type="button" onclick="publishToGitHub()" class="bg-green-700 hover:bg-green-800 text-white px-5 py-2 rounded-md text-sm font-medium transition-all">发布上线</button>
+                    </div>
+                </div>
+                <p id="token-status" class="text-xs text-gray-400"></p>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -408,6 +419,90 @@
             updateDataStatus();
         }
 
+        // ============ 一键发布到 GitHub（Contents API，手机可用） ============
+        const GH_REPO = 'MiyoungLiu/yitai-fabric';
+        const GH_FILE = 'data/products.json';
+        function utf8ToBase64(str) {
+            const bytes = new TextEncoder().encode(str);
+            let bin = '';
+            bytes.forEach(b => { bin += String.fromCharCode(b); });
+            return btoa(bin);
+        }
+        function saveToken() {
+            const v = document.getElementById('gh-token').value.trim();
+            if (v) localStorage.setItem('ghPublishToken', v);
+            else localStorage.removeItem('ghPublishToken');
+            updateTokenStatus();
+        }
+        function updateTokenStatus() {
+            const el = document.getElementById('token-status');
+            if (!el) return;
+            el.textContent = localStorage.getItem('ghPublishToken')
+                ? '✓ Token 已保存在本浏览器，可直接点「发布上线」'
+                : '未配置 Token：配置后手机/电脑都能在网页上直接发布产品（Token 仅授予本仓库数据写入权限）';
+        }
+        async function ghApi(method, url, body) {
+            const token = localStorage.getItem('ghPublishToken');
+            const res = await fetch('https://api.github.com' + url, {
+                method,
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Content-Type': 'application/json'
+                },
+                body: body ? JSON.stringify(body) : undefined
+            });
+            if (!res.ok) {
+                let msg = 'HTTP ' + res.status;
+                try { msg += ' ' + (await res.text()).slice(0, 200); } catch (e) {}
+                const err = new Error(msg);
+                err.status = res.status;
+                throw err;
+            }
+            return res.json();
+        }
+        async function publishToGitHub() {
+            if (!localStorage.getItem('ghPublishToken')) {
+                alert('请先创建并粘贴 GitHub Token（一次性操作）：\n\n' +
+                    '1. 电脑或手机浏览器打开 github.com（可登录状态）\n' +
+                    '2. 头像 → Settings → Developer settings → Personal access tokens → Fine-grained tokens\n' +
+                    '3. Generate new token：Repository access 选 Only select repositories → MiyoungLiu/yitai-fabric\n' +
+                    '4. Permissions → Contents → Read and write → 生成并复制\n' +
+                    '5. 回到本页粘贴到输入框，点「保存Token」');
+                document.getElementById('gh-token').focus();
+                return;
+            }
+            if (!confirm('将把当前产品数据（共 ' + products.length + ' 款）发布到线上，覆盖线上版本，继续吗？')) return;
+            try {
+                // 1. 获取线上文件当前 sha（用于更新）
+                let sha = null;
+                const meta = await ghApi('GET', '/repos/' + GH_REPO + '/contents/' + GH_FILE);
+                sha = meta.sha;
+                // 2. 提交新内容
+                await ghApi('PUT', '/repos/' + GH_REPO + '/contents/' + GH_FILE, {
+                    message: 'chore: 更新产品数据（后台一键发布 ' + new Date().toLocaleString('zh-CN') + '）',
+                    content: utf8ToBase64(JSON.stringify(products, null, 2)),
+                    sha: sha
+                });
+                // 3. 发布成功后：线上数据即当前数据，清除本地草稿标记
+                onlineProducts = products.map(p => ({ ...p }));
+                localStorage.removeItem('fabricProducts');
+                updateDataStatus();
+                alert('发布成功！约 1 分钟后官网自动更新，届时刷新页面即可看到。');
+            } catch (e) {
+                if (e.status === 401 || e.status === 403) {
+                    localStorage.removeItem('ghPublishToken');
+                    updateTokenStatus();
+                    alert('Token 无效或已过期，请重新创建并保存后再试。');
+                } else if (e.status === 409) {
+                    alert('线上文件刚被别人更新过，请刷新页面获取最新数据后再发布。');
+                } else {
+                    alert('发布失败：' + e.message + '\n\n若为网络错误，可能是当前网络访问 GitHub 受限，请换个网络或稍后重试。');
+                }
+            }
+        }
+
         // ============ 页面渲染 ============
         function renderAll() {
             renderFilters();
@@ -621,6 +716,7 @@
         // ============ 初始化 ============
         async function init() {
             await loadData();
+            updateTokenStatus();
             renderAll();
             updateDataStatus();
 

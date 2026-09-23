@@ -14,7 +14,23 @@ yitai-fabric/
 └── js/tailwind.js      # Tailwind 本地化脚本
 ```
 
-## 更新产品流程（推荐：全程网页操作，无需装任何软件）
+## 更新产品流程
+
+### 方式一：一键发布（推荐，手机电脑都能用）
+
+首次配置（一次性，约 3 分钟）：
+
+1. 浏览器登录 GitHub → 头像 → **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**
+2. Repository access 选 **Only select repositories** → `MiyoungLiu/yitai-fabric`
+3. Permissions → **Contents** → **Read and write** → 生成并复制 Token
+4. 打开官网 → 后台管理 → 数据管理区粘贴 Token → 点**保存Token**（只保存在你自己的浏览器）
+
+日常更新：
+
+1. 打开官网 → 后台管理 → 修改产品
+2. 点**发布上线** → 确认 → 约 1 分钟后官网自动更新
+
+### 方式二：导出 + GitHub 网页粘贴（无需 Token）
 
 1. 打开官网 → 点「后台管理」→ 输入密码
 2. 新增 / 编辑 / 删除产品（改动先保存在你的浏览器，页面顶部有状态提示）
@@ -25,6 +41,8 @@ yitai-fabric/
 6. 点 **Commit changes** → 约 1 分钟后官网自动更新
 
 > 会用 git 的话：本地替换 `data/products.json` 后 `git push` 到 main 分支，效果相同。
+>
+> 手机上 GitHub 网页没有铅笔图标：需登录后用浏览器菜单「桌面版网站」，或点「···」找 Edit。推荐用方式一。
 
 ## 转交管理 / 多人协作
 
