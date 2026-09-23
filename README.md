@@ -2,7 +2,7 @@
 
 单文件静态产品展示网站：产品展示 + 本地后台管理，部署于 **GitHub Pages**。
 
-**官网地址**：https://miyoungliu.github.io/yitai-fabric/
+**官网地址**：https://chqpiggy.github.io/yitai-fabric/
 
 ## 目录结构
 
@@ -21,7 +21,7 @@ yitai-fabric/
 首次配置（一次性，约 3 分钟）：
 
 1. 浏览器登录 GitHub → 头像 → **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**
-2. Repository access 选 **Only select repositories** → `MiyoungLiu/yitai-fabric`
+2. Repository access 选 **Only select repositories** → `Chqpiggy/yitai-fabric`
 3. Permissions → **Contents** → **Read and write** → 生成并复制 Token
 4. 打开官网 → 后台管理 → 数据管理区粘贴 Token → 点**保存Token**（只保存在你自己的浏览器）
 
@@ -36,7 +36,7 @@ yitai-fabric/
 2. 新增 / 编辑 / 删除产品（改动先保存在你的浏览器，页面顶部有状态提示）
 3. 点「导出数据」，得到 `products.json`（产品图片已自动转成 base64 包含在内）
 4. 打开 GitHub 上的数据文件：
-   `github.com/MiyoungLiu/yitai-fabric/blob/main/data/products.json`
+   `github.com/Chqpiggy/yitai-fabric/blob/main/data/products.json`
 5. 点右上角**铅笔图标**编辑 → 全选删除 → 粘贴新导出的 JSON 内容
 6. 点 **Commit changes** → 约 1 分钟后官网自动更新
 
