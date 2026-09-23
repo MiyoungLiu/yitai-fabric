@@ -429,9 +429,13 @@
         function updateTokenStatus() {
             const el = document.getElementById('token-status');
             if (!el) return;
-            el.textContent = localStorage.getItem('ghPublishToken')
-                ? '✓ Token 已保存，直接点「发布上线」'
+            const saved = localStorage.getItem('ghPublishToken');
+            const input = document.getElementById('gh-token');
+            if (input && saved) input.value = saved;
+            el.textContent = saved
+                ? '✓ Token 已保存，无需重复粘贴，直接点「发布上线」'
                 : '首次发布：先粘贴 Token，点「发布上线」时自动保存（仅授予本仓库数据写入权限）';
+            el.className = saved ? 'text-xs text-green-700 font-medium mt-2' : 'text-xs text-gray-400 mt-2';
         }
         async function ghApi(method, url, body) {
             const token = localStorage.getItem('ghPublishToken');
