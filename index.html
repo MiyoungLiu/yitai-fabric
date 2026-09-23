@@ -8,7 +8,7 @@
     <meta property="og:title" content="亿泰纺织 - 高端面料供应商">
     <meta property="og:description" content="甄选全球优质面料，涵盖棉、麻、丝、毛、功能化纤全品类，支持定制开发与小样寄送。">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="https://miyoungliu.github.io/yitai-fabric/images/product-cotton.jpg">
+    <meta property="og:image" content="https://chqpiggy.github.io/yitai-fabric/images/product-cotton.jpg">
     <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
     <script src="js/tailwind.js"></script>
     <style>
@@ -420,7 +420,8 @@
         }
 
         // ============ 一键发布到 GitHub（Contents API，手机可用） ============
-        const GH_REPO = 'MiyoungLiu/yitai-fabric';
+        // 候选仓库地址：发布时自动探测真实归属（API 跟随转移重定向），转移前后均可用
+        const GH_REPO_CANDIDATES = ['Chqpiggy/yitai-fabric', 'MiyoungLiu/yitai-fabric'];
         const GH_FILE = 'data/products.json';
         function utf8ToBase64(str) {
             const bytes = new TextEncoder().encode(str);
@@ -462,12 +463,21 @@
             }
             return res.json();
         }
+        async function detectRepo() {
+            for (const cand of GH_REPO_CANDIDATES) {
+                try {
+                    const info = await ghApi('GET', '/repos/' + cand);
+                    if (info && info.full_name) return info.full_name;
+                } catch (e) { /* 尝试下一个候选 */ }
+            }
+            throw new Error('无法定位仓库：若刚转移过仓库，请用当前所有者的账号重新生成 Token 并保存');
+        }
         async function publishToGitHub() {
             if (!localStorage.getItem('ghPublishToken')) {
                 alert('请先创建并粘贴 GitHub Token（一次性操作）：\n\n' +
                     '1. 电脑或手机浏览器打开 github.com（可登录状态）\n' +
                     '2. 头像 → Settings → Developer settings → Personal access tokens → Fine-grained tokens\n' +
-                    '3. Generate new token：Repository access 选 Only select repositories → MiyoungLiu/yitai-fabric\n' +
+                    '3. Generate new token：Repository access 选 Only select repositories → 选 yitai-fabric 仓库\n' +
                     '4. Permissions → Contents → Read and write → 生成并复制\n' +
                     '5. 回到本页粘贴到输入框，点「保存Token」');
                 document.getElementById('gh-token').focus();
@@ -475,12 +485,13 @@
             }
             if (!confirm('将把当前产品数据（共 ' + products.length + ' 款）发布到线上，覆盖线上版本，继续吗？')) return;
             try {
-                // 1. 获取线上文件当前 sha（用于更新）
+                // 1. 自动识别仓库当前归属，再获取线上文件 sha
+                const repo = await detectRepo();
                 let sha = null;
-                const meta = await ghApi('GET', '/repos/' + GH_REPO + '/contents/' + GH_FILE);
+                const meta = await ghApi('GET', '/repos/' + repo + '/contents/' + GH_FILE);
                 sha = meta.sha;
                 // 2. 提交新内容
-                await ghApi('PUT', '/repos/' + GH_REPO + '/contents/' + GH_FILE, {
+                await ghApi('PUT', '/repos/' + repo + '/contents/' + GH_FILE, {
                     message: 'chore: 更新产品数据（后台一键发布 ' + new Date().toLocaleString('zh-CN') + '）',
                     content: utf8ToBase64(JSON.stringify(products, null, 2)),
                     sha: sha
