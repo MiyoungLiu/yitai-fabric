@@ -82,6 +82,18 @@
             <p class="text-gray-500 max-w-xl mx-auto text-sm sm:text-base">全品类高端面料矩阵，支持定制开发与小样寄送</p>
         </div>
 
+        <!-- 搜索栏 -->
+        <div class="max-w-xl mx-auto mb-6 sm:mb-8 relative">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input id="search-input" type="text" inputmode="search" enterkeyhint="search" autocomplete="off"
+                placeholder="搜索面料：名称 / 成分 / 描述…"
+                class="w-full pl-10 sm:pl-11 pr-10 py-2.5 sm:py-3 rounded-full border border-gray-200 bg-white text-sm sm:text-base text-gray-800 placeholder-gray-400 shadow-sm focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200"
+                oninput="onSearchInput(this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+            <button id="search-clear" onclick="clearSearch()" style="display:none" aria-label="清空搜索"
+                class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-sm items-center justify-center">×</button>
+        </div>
         <!-- 分类筛选 -->
         <div class="flex flex-wrap gap-2 sm:gap-3 justify-center mb-8 sm:mb-12" id="filter-container">
             <button class="filter-btn bg-gray-800 text-white px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm" data-category="all">全部</button>
@@ -624,6 +636,22 @@
             renderFilters();
             renderProductGrid();
         }
+        // ============ 产品搜索 ============
+        let searchQuery = '';   // 小写化关键词
+        let searchRaw = '';     // 原始输入（用于提示语）
+        function onSearchInput(v) {
+            searchRaw = v.trim();
+            searchQuery = searchRaw.toLowerCase();
+            document.getElementById('search-clear').style.display = searchQuery ? 'flex' : 'none';
+            renderProductGrid();
+        }
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            searchRaw = '';
+            searchQuery = '';
+            document.getElementById('search-clear').style.display = 'none';
+            renderProductGrid();
+        }
         function renderProductGrid() {
             const grid = document.getElementById('product-grid');
             const empty = document.getElementById('empty-show');
@@ -631,8 +659,16 @@
             let filtered = currentFilter === 'all'
                 ? products
                 : products.filter(p => p.category === currentFilter);
+            if (searchQuery) {
+                filtered = filtered.filter(p =>
+                    [p.name, p.composition, p.desc, p.category, p.weight, p.width]
+                        .some(f => f && String(f).toLowerCase().includes(searchQuery)));
+            }
             if (filtered.length === 0) {
                 grid.innerHTML = '';
+                empty.querySelector('p').textContent = searchQuery
+                    ? '没有找到与「' + searchRaw + '」相关的产品，换个关键词试试（如：羊毛、TC、全棉）'
+                    : '暂无产品，请前往后台管理添加';
                 empty.classList.remove('hidden');
                 return;
             }
