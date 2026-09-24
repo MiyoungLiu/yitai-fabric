@@ -1,5 +1,5 @@
 'use strict';
-// 亿泰纺织 · 云发布函数（腾讯云 SCF / Nodejs 18.15）
+// 亿泰纺织 · 云发布函数（腾讯云 SCF / 事件函数 / Nodejs 18+）
 // 作用：Token 保存在本函数的环境变量里，网页端凭后台密码即可发布
 // 环境变量：
 //   GH_TOKEN              —— GitHub Fine-grained Token（Contents: Read and write，仅授权本仓库）
@@ -31,6 +31,28 @@ function jsonRes(statusCode, body) {
         headers: Object.assign({ 'Content-Type': 'application/json; charset=utf-8' }, CORS),
         body: JSON.stringify(body)
     };
+}
+
+// 事件格式自适应：兼容 httpMethod / requestContext.http.method 等不同封装
+function getMethod(event) {
+    if (!event || typeof event !== 'object') return 'POST';
+    if (event.httpMethod) return String(event.httpMethod).toUpperCase();
+    if (event.requestContext && event.requestContext.http && event.requestContext.http.method) {
+        return String(event.requestContext.http.method).toUpperCase();
+    }
+    if (event.requestContext && event.requestContext.httpMethod) {
+        return String(event.requestContext.httpMethod).toUpperCase();
+    }
+    return 'POST';
+}
+
+// 提取请求体：字符串直取；对象转 JSON；空值返回空串（绝不静默当成功）
+function getRawBody(event) {
+    if (!event || typeof event !== 'object') return '';
+    const raw = event.body;
+    if (raw === undefined || raw === null) return '';
+    if (typeof raw === 'object') return JSON.stringify(raw);
+    return String(raw);
 }
 
 async function ghApi(method, url, body, token) {
@@ -66,12 +88,15 @@ async function detectRepo(token) {
 }
 
 exports.main_handler = async (event) => {
+    // 兼容 event 直接是字符串 body 的情况
+    const method = (typeof event === 'string') ? 'POST' : getMethod(event);
+
     // CORS 预检
-    if (event.httpMethod === 'OPTIONS') {
+    if (method === 'OPTIONS') {
         return { statusCode: 204, headers: CORS, body: '' };
     }
-    // 健康检查（GET）
-    if (event.httpMethod === 'GET' || !event.body) {
+    // 健康检查（仅显式 GET）
+    if (method === 'GET') {
         return jsonRes(200, { ok: true, service: 'yitai-publish' });
     }
 
@@ -79,11 +104,20 @@ exports.main_handler = async (event) => {
         return jsonRes(429, { ok: false, error: '尝试过于频繁，请 10 分钟后再试' });
     }
 
-    // 解析请求体
+    // 提取并解析请求体（POST 缺 body 直接明确报错，绝不假装成功）
+    let raw;
+    if (typeof event === 'string') {
+        raw = event;
+    } else {
+        raw = getRawBody(event);
+        if (event && event.isBase64Encoded) raw = Buffer.from(raw, 'base64').toString('utf8');
+    }
+    if (!raw) {
+        return jsonRes(400, { ok: false, error: '缺少产品数据（请求体为空）' });
+    }
+
     let payload;
     try {
-        let raw = event.body;
-        if (event.isBase64Encoded) raw = Buffer.from(raw, 'base64').toString('utf8');
         payload = JSON.parse(raw);
     } catch (e) {
         return jsonRes(400, { ok: false, error: '请求格式错误' });
