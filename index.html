@@ -419,8 +419,8 @@
         }
 
         // ============ 一键发布到 GitHub（Contents API，手机可用） ============
-        // 云发布：配置腾讯云函数 URL 后，凭后台密码即可发布（任何设备零配置）；留空则使用本地 Token 模式
-        const CLOUD_PUBLISH_URL = '';
+        // 云发布：凭后台密码直发腾讯云函数（任何设备零配置）；连不上时自动降级 Token 模式
+        const CLOUD_PUBLISH_URL = 'https://1494601807-e0h6ul1pgw.ap-shanghai.tencentscf.com';
         // 候选仓库地址：发布时自动探测真实归属（API 跟随转移重定向），转移前后均可用
         const GH_REPO_CANDIDATES = ['Chqpiggy/yitai-fabric', 'MiyoungLiu/yitai-fabric'];
         const GH_FILE = 'data/products.json';
@@ -478,6 +478,16 @@
             }
             throw new Error('无法定位仓库：若刚转移过仓库，请用当前所有者的账号重新生成 Token 并保存');
         }
+        // 云发布不可用（如公司网络拦截）时，恢复 Token 备用通道
+        function showTokenFallback() {
+            const inp = document.getElementById('gh-token');
+            if (inp) inp.style.display = '';
+            const el = document.getElementById('token-status');
+            if (el) {
+                el.textContent = '云发布通道当前网络不可用，已切换为 Token 方式（向管理员索取 Token 粘贴到上面即可发布）';
+                el.className = 'text-xs text-amber-700 mt-2';
+            }
+        }
         // 云发布：密码提交到腾讯云函数验证，Token 始终不进浏览器
         async function publishViaCloud() {
             if (!adminPassword) { alert('请先通过后台密码登录后再发布'); return; }
@@ -495,7 +505,12 @@
                 updateDataStatus();
                 alert('发布成功！约 1 分钟后官网自动更新，届时刷新页面即可看到。');
             } catch (e) {
-                alert('发布失败：' + e.message);
+                if (e instanceof TypeError) {
+                    showTokenFallback();
+                    alert('当前网络无法连接云发布通道（部分公司/内网会拦截），已显示 Token 备用方式。\n\n手机流量或家庭网络下可直接用密码发布，不受影响。');
+                } else {
+                    alert('发布失败：' + e.message);
+                }
             }
         }
         async function publishToGitHub() {
