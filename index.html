@@ -269,6 +269,7 @@
         let onlineProducts = [];    // data/products.json 拉取的已发布数据
         let currentFilter = 'all';
         let currentImageBase64 = '';
+        let adminPassword = '';     // 本次会话输入的后台密码（云发布时用于服务端验证）
 
         // ============ 工具函数 ============
         // HTML 转义，防止产品名等含特殊字符破坏页面
@@ -287,6 +288,7 @@
             let ok = false;
             try { ok = (await sha256Hex(inputPwd)) === ADMIN_PASSWORD_HASH; } catch (e) { ok = false; }
             if (ok) {
+                adminPassword = inputPwd;
                 switchTab('admin');
             } else {
                 alert('密码错误，无法进入后台！');
@@ -417,6 +419,8 @@
         }
 
         // ============ 一键发布到 GitHub（Contents API，手机可用） ============
+        // 云发布：配置腾讯云函数 URL 后，凭后台密码即可发布（任何设备零配置）；留空则使用本地 Token 模式
+        const CLOUD_PUBLISH_URL = '';
         // 候选仓库地址：发布时自动探测真实归属（API 跟随转移重定向），转移前后均可用
         const GH_REPO_CANDIDATES = ['Chqpiggy/yitai-fabric', 'MiyoungLiu/yitai-fabric'];
         const GH_FILE = 'data/products.json';
@@ -429,6 +433,13 @@
         function updateTokenStatus() {
             const el = document.getElementById('token-status');
             if (!el) return;
+            if (CLOUD_PUBLISH_URL) {
+                const inp = document.getElementById('gh-token');
+                if (inp) inp.style.display = 'none';
+                el.textContent = '✓ 云发布已启用：凭后台密码即可发布，任何设备无需配置';
+                el.className = 'text-xs text-green-700 font-medium mt-2';
+                return;
+            }
             const saved = localStorage.getItem('ghPublishToken');
             const input = document.getElementById('gh-token');
             if (input && saved) input.value = saved;
@@ -467,7 +478,28 @@
             }
             throw new Error('无法定位仓库：若刚转移过仓库，请用当前所有者的账号重新生成 Token 并保存');
         }
+        // 云发布：密码提交到腾讯云函数验证，Token 始终不进浏览器
+        async function publishViaCloud() {
+            if (!adminPassword) { alert('请先通过后台密码登录后再发布'); return; }
+            if (!confirm('将把当前产品数据（共 ' + products.length + ' 款）发布到线上，覆盖线上版本，继续吗？')) return;
+            try {
+                const res = await fetch(CLOUD_PUBLISH_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: adminPassword, content: products })
+                });
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.error || '发布失败');
+                onlineProducts = products.map(p => ({ ...p }));
+                localStorage.removeItem('fabricProducts');
+                updateDataStatus();
+                alert('发布成功！约 1 分钟后官网自动更新，届时刷新页面即可看到。');
+            } catch (e) {
+                alert('发布失败：' + e.message);
+            }
+        }
         async function publishToGitHub() {
+            if (CLOUD_PUBLISH_URL) { publishViaCloud(); return; }
             // 输入框有内容就自动保存（无需单独的保存按钮）
             const typed = document.getElementById('gh-token').value.trim();
             if (typed) { localStorage.setItem('ghPublishToken', typed); updateTokenStatus(); }
