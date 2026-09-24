@@ -296,7 +296,7 @@
         }
 
         // 图片压缩函数：最大长边1600，质量0.7，返回base64
-        function compressImageToBase64(file, maxSide = 1600, quality = 0.7) {
+        function compressImageToBase64(file, maxSide = 1200, quality = 0.65) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
                 const objectUrl = URL.createObjectURL(file);
@@ -488,10 +488,35 @@
                 el.className = 'text-xs text-amber-700 mt-2';
             }
         }
+        // 发布前冲突检测：拉取线上最新已提交数据（绕过网页缓存），与页面加载时的基线比对
+        async function fetchRemoteProducts() {
+            for (const repo of GH_REPO_CANDIDATES) {
+                try {
+                    const r = await fetch('https://api.github.com/repos/' + repo + '/contents/' + GH_FILE, {
+                        headers: { 'Accept': 'application/vnd.github.raw' }
+                    });
+                    if (!r.ok) continue;
+                    const remote = await r.json();
+                    if (Array.isArray(remote)) return remote;
+                } catch (e) { /* 尝试下一个候选 */ }
+            }
+            return null;
+        }
+        // 线上若已被别人更新则弹窗确认；返回 true 表示可以继续发布
+        async function confirmIfRemoteUpdated() {
+            const remote = await fetchRemoteProducts();
+            if (remote === null) return true; // 拿不到最新数据时不阻塞发布
+            if (JSON.stringify(remote) === JSON.stringify(onlineProducts)) return true;
+            return confirm('⚠️ 检测到线上数据比你当前页面更新（别人可能刚发布过修改）。\n\n' +
+                '现在直接发布会用你这边的数据覆盖线上，别人刚做的修改会丢失。\n\n' +
+                '建议：点「取消」→ 点「清除本地修改」→ 刷新页面 → 重新做你的修改 → 再发布。\n\n' +
+                '确定仍要以你当前的数据覆盖发布吗？');
+        }
         // 云发布：密码提交到腾讯云函数验证，Token 始终不进浏览器
         async function publishViaCloud() {
             if (!adminPassword) { alert('请先通过后台密码登录后再发布'); return; }
             if (!confirm('将把当前产品数据（共 ' + products.length + ' 款）发布到线上，覆盖线上版本，继续吗？')) return;
+            if (!(await confirmIfRemoteUpdated())) return;
             try {
                 const res = await fetch(CLOUD_PUBLISH_URL, {
                     method: 'POST',
@@ -529,6 +554,7 @@
                 return;
             }
             if (!confirm('将把当前产品数据（共 ' + products.length + ' 款）发布到线上，覆盖线上版本，继续吗？')) return;
+            if (!(await confirmIfRemoteUpdated())) return;
             try {
                 // 1. 自动识别仓库当前归属，再获取线上文件 sha
                 const repo = await detectRepo();
